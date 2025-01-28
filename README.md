@@ -168,21 +168,40 @@ python test_setup.py
 
 ## Docker Setup
 
-1. Build and run using Docker Compose:
+### Build Docker Image
 ```bash
-docker-compose up --build
+docker-compose build
 ```
 
-### Commands
-
-Common operations:
+### Sequential Processing
 ```bash
-# Run visualization
-docker-compose run --rm plantation-monitor python src/data_visualization.py
-
-# Run Jupyter notebook
-docker-compose run --rm -p 8888:8888 plantation-monitor jupyter notebook --ip 0.0.0.0 --allow-root
+# Run with sequential processing
+docker-compose up plantation-monitor
 ```
+
+### Parallel Processing
+```bash
+# Run with parallel processing (4 workers)
+docker-compose up parallel-monitor
+
+# Or specify custom workers
+docker-compose run --rm parallel-monitor python run_pipeline.py --parallel --workers 8
+```
+
+### Memory Considerations
+- Sequential service is limited to 8GB memory
+- Parallel service is limited to 16GB memory
+- Adjust memory limits in docker-compose.yml based on your system
+
+### Service Account
+To use a service account:
+1. Set GOOGLE_APPLICATION_CREDENTIALS environment variable:
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+```
+2. The file will be mounted automatically in the container
+
+
 
 
 
