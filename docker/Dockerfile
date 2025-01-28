@@ -6,29 +6,39 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    libgdal-dev \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gdal-bin \
-    libgdal-dev \
-    gcc \
-    g++ \
-    && rm -rf /var/lib/apt/lists/*
+# Copy requirements first to leverage Docker cache
+COPY requirements.txt .
 
 # Install Python dependencies
-COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
+# Install additional dependencies for parallel processing
+RUN pip install --no-cache-dir \
+    multiprocess \
+    psutil
+
+# Copy the rest of the application
 COPY . .
 
+# Install the package in development mode
+RUN pip install -e .
+
 # Create necessary directories
-RUN mkdir -p /app/outputs/{models,visualizations}
+RUN mkdir -p data/processed outputs/models outputs/visualizations outputs/checkpoints
 
-# Set up Earth Engine authentication
-RUN mkdir -p /root/.config/earthengine
+# Add entrypoint script
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Command to run on container start
-CMD ["python", "src/data_visualization.py"] 
+ENTRYPOINT ["/entrypoint.sh"]

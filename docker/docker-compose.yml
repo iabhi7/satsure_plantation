@@ -9,10 +9,26 @@ services:
       - ..:/app
       - ../data:/app/data
       - ../outputs:/app/outputs
-      - ~/.config/earthengine:/root/.config/earthengine:ro
+      # Mount service account if available
+      - ${GOOGLE_APPLICATION_CREDENTIALS:-/dev/null}:/app/service-account.json:ro
     environment:
-      - SENTINEL_HUB_CLIENT_ID=${SENTINEL_HUB_CLIENT_ID}
-      - SENTINEL_HUB_CLIENT_SECRET=${SENTINEL_HUB_CLIENT_SECRET}
-    ports:
-      - "8888:8888"
-    command: python src/data_visualization.py 
+      - PYTHONPATH=/app
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/service-account.json
+    command: python run_pipeline.py
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+        reservations:
+          memory: 4G
+
+  parallel-monitor:
+    extends:
+      service: plantation-monitor
+    command: python run_pipeline.py --parallel --workers 4
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+        reservations:
+          memory: 8G 
