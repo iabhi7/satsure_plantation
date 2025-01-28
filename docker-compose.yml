@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  plantation-monitor:
+    build: .
+    volumes:
+      - .:/app
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+      - ~/.config/earthengine:/root/.config/earthengine:ro  # Mount Earth Engine credentials
+    environment:
+      - SENTINEL_HUB_CLIENT_ID=${SENTINEL_HUB_CLIENT_ID}
+      - SENTINEL_HUB_CLIENT_SECRET=${SENTINEL_HUB_CLIENT_SECRET}
+    ports:
+      - "8888:8888"  # For Jupyter notebook if needed
+    command: python src/data_visualization.py 
