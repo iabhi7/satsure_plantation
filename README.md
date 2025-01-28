@@ -73,12 +73,15 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### Docker Setup
-
-1. Build and run using Docker Compose:
+4. Authenticate with Google Earth Engine:
 ```bash
-docker-compose up --build
+earthengine authenticate
 ```
+
+5. (Optional) Set up service account:
+- Create a service-account.json file with your Google Earth Engine credentials
+- Place it in the project root directory
+
 
 ## Usage
 
@@ -117,6 +120,30 @@ Process the plantation data:
 python src/data_preprocessing.py
 ```
 
+
+### Basic Usage
+
+Run the complete pipeline sequentially:
+```bash
+python run_pipeline.py
+```
+
+### Parallel Processing
+
+For faster data processing, you can use parallel execution:
+
+1. Run with default parallel settings (8 workers):
+```bash
+python run_pipeline.py --parallel
+```
+
+2. Run with custom number of workers:
+```bash
+python run_pipeline.py --parallel --workers 4
+```
+
+Note: The number of workers should be adjusted based on your system's capabilities. More workers may speed up processing but will also use more memory.
+
 ## Dependencies
 
 Core requirements:
@@ -139,7 +166,14 @@ Run the test suite:
 python test_setup.py
 ```
 
-## Docker Commands
+## Docker Setup
+
+1. Build and run using Docker Compose:
+```bash
+docker-compose up --build
+```
+
+### Commands
 
 Common operations:
 ```bash
@@ -150,14 +184,16 @@ docker-compose run --rm plantation-monitor python src/data_visualization.py
 docker-compose run --rm -p 8888:8888 plantation-monitor jupyter notebook --ip 0.0.0.0 --allow-root
 ```
 
-## Contributing
 
-1. Fork the repository
-2. Create your feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
 
-## License
+### Pipeline Components
 
-MIT License
+The pipeline consists of several stages:
+1. Data preprocessing (sequential or parallel)
+2. Model training
+3. Inference
+4. Visualization
+
+### Data Requirements
+
+- Place your plantation data in `data/Plantations Data.geojson`
