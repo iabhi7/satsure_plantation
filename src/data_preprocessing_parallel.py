@@ -36,15 +36,19 @@ def initialize_ee(service_account_key=None):
 
 class ParallelDataCollector:
     def __init__(self, geojson_path, output_dir, n_workers=8):
-        self.geojson_path = geojson_path
+        if not os.path.exists(geojson_path):
+            raise FileNotFoundError(f"GeoJSON file not found: {geojson_path}")
+        
+        try:
+            self.gdf = gpd.read_file(geojson_path)
+        except Exception as e:
+            raise ValueError(f"Error reading GeoJSON: {e}")
+        
         self.output_dir = output_dir
         self.n_workers = n_workers
         
         # Create output directory
         os.makedirs(output_dir, exist_ok=True)
-        
-        # Load GeoJSON
-        self.gdf = gpd.read_file(geojson_path)
         
         # Initialize Earth Engine
         ee.Initialize()
