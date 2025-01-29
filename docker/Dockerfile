@@ -46,7 +46,7 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD python -c "import ee; ee.Initialize()" || exit 1
 
 # Add proper labels
-LABEL maintainer="Your Name <your.email@example.com>"
+LABEL maintainer="Abhishek <me@iabhi.in>"
 LABEL version="1.0"
 LABEL description="Plantation Detection using Multi-Source Satellite Imagery"
 
