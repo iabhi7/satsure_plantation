@@ -157,7 +157,7 @@ dec4 = self.decoder4(torch.cat([
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/plantation-monitoring.git
+git clone https://github.com/iabhi7/plantation-monitoring.git
 cd plantation-monitoring
 ```
 
