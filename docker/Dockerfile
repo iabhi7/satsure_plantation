@@ -41,4 +41,13 @@ RUN mkdir -p data/processed outputs/models outputs/visualizations outputs/checkp
 COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Add health check
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD python -c "import ee; ee.Initialize()" || exit 1
+
+# Add proper labels
+LABEL maintainer="Your Name <your.email@example.com>"
+LABEL version="1.0"
+LABEL description="Plantation Detection using Multi-Source Satellite Imagery"
+
 ENTRYPOINT ["/entrypoint.sh"]
