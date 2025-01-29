@@ -19,6 +19,22 @@ class ConvBlock(nn.Module):
         return self.conv(x)
 
 class MultiSourceUNet(nn.Module):
+    """Multi-Source U-Net for plantation detection using satellite imagery.
+    
+    Architecture:
+    - Separate encoders for Sentinel-1, Sentinel-2, and MODIS data
+    - Feature fusion module to combine multi-source information
+    - U-Net style decoder with skip connections
+    
+    Args:
+        n_classes (int): Number of output classes (default: 1 for binary segmentation)
+    
+    Input:
+        x (torch.Tensor): [B, 8, H, W] tensor containing:
+            - Sentinel-2 (4 bands): RGB + NIR
+            - Sentinel-1 (2 bands): VV + VH
+            - MODIS (2 bands): NDVI + EVI
+    """
     def __init__(self, n_classes=1):
         super().__init__()
         
