@@ -52,6 +52,105 @@ plantation-monitoring/
 - Model training setup
 - Inference pipeline
 
+### Model Details
+- Data Input Structure (8 channels total)
+```
+def forward(self, x):
+    # x shape: [batch_size, 8, height, width]
+    
+    # Split input into different sources
+    s2_input = x[:, :4]     # Sentinel-2: RGB + NIR bands
+    s1_input = x[:, 4:6]    # Sentinel-1: VV + VH bands (radar)
+    modis_input = x[:, 6:]  # MODIS: NDVI + EVI (vegetation indices)
+```
+- Separate Encoders for Each Source:
+```
+class MultiSourceUNet(nn.Module):
+    def __init__(self, n_classes=1):
+        # Specialized encoders for each data type
+        self.s2_encoder = self._create_encoder(4)  # Optical data
+        self.s1_encoder = self._create_encoder(2)  # Radar data
+        self.modis_encoder = self._create_encoder(2)  # Time-series data
+```
+- Feature Extraction Process:
+```
+def _encode_single_source(self, x, encoder):
+    features = []
+    for layer in encoder:
+        x = layer(x)
+        features.append(x)  # Store features for skip connections
+    return features
+```
+- Feature Fusion:
+```
+# Fusion layer combines features intelligently
+self.fusion = nn.Sequential(
+    nn.Conv2d(512 * 3, 512, 1),  # Combine features from all sources
+    nn.BatchNorm2d(512),
+    nn.ReLU(inplace=True)
+)
+
+# In forward pass
+fused_features = self.fusion(torch.cat([
+    s2_features[-1],  # High-level Sentinel-2 features
+    s1_features[-1],  # High-level Sentinel-1 features
+    modis_features[-1]  # High-level MODIS features
+], dim=1))
+```
+### Advantages over Standard U-Net:
+- Multi-Source Capability:
+```
+# Standard U-Net can only handle one type of input:
+class StandardUNet:
+    def __init__(self):
+        self.encoder = single_encoder(in_channels=3)  # Only RGB
+
+# Our MultiSourceUNet handles multiple sources:
+class MultiSourceUNet:
+    def __init__(self):
+        self.s2_encoder = specialized_encoder(4)  # RGB + NIR
+        self.s1_encoder = specialized_encoder(2)  # Radar
+        self.modis_encoder = specialized_encoder(2)  # Time series
+```
+- Complementary Information:
+```
+# Each source provides unique information:
+s2_features  # Spectral information (vegetation, water)
+s1_features  # Radar backscatter (structure, moisture)
+modis_features  # Temporal patterns (seasonal changes)
+```
+- Robustness to Missing Data:
+```
+def forward(self, x):
+    # Can still work if some data is missing
+    if has_s2_data:
+        s2_features = self.s2_encoder(x[:, :4])
+    else:
+        s2_features = self.get_default_features()
+    
+    # Continue processing with available data
+```
+- Source-Specific Feature Learning:
+```
+def _create_encoder(self, in_channels):
+    """Each encoder is optimized for its data type"""
+    if in_channels == 4:  # Sentinel-2
+        # Optimize for spectral data
+        first_conv.weight.data[:, :3] = resnet.conv1.weight.data
+        first_conv.weight.data[:, 3] = resnet.conv1.weight.data.mean(dim=1)
+    elif in_channels == 2:  # Sentinel-1
+        # Optimize for radar data
+        # Different initialization for radar features
+```
+- Skip Connections with Rich Features:
+```
+# Decoding with rich feature combinations
+dec4 = self.decoder4(torch.cat([
+    dec5,  # High-level fused features
+    s2_features[-2]  # Skip connection with optical features
+], dim=1))
+```
+
 ## Installation
 
 ### Local Setup
