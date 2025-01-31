@@ -22,6 +22,76 @@ plantation-monitoring/
 └── README.md
 ```
 
+
+# Plantation Detection Model
+
+## Notebooks Documentation
+
+### 1. Model Pretraining (`src/pretrain.py`)
+
+The pretraining script handles the preparation of training data and model training for plantation detection.
+
+#### Key Components:
+
+1. **Data Preparation**
+   ```prepare_training_data(geojson_path, output_dir, patch_size=256, max_samples=100)```
+   - Downloads Sentinel-2 imagery for plantation areas
+   - Creates binary masks from plantation polygons
+   - Saves georeferenced image-mask pairs
+   - Parameters:
+     - `geojson_path`: Path to plantation polygons
+     - `output_dir`: Directory to save processed data
+     - `patch_size`: Size of image patches (default: 256x256)
+     - `max_samples`: Maximum number of samples to process
+
+2. **Dataset Class**
+   ```python class PlantationDataset(Dataset)```
+   - Handles data loading and preprocessing
+   - Performs normalization and augmentation
+   - Returns image-mask pairs for training
+
+3. **Model Training**
+   ```python train_model(data_dir, num_epochs=10, batch_size=4, learning_rate=0.001)```
+   - Uses DeepLabV3 with ResNet-50 backbone
+   - Binary segmentation for plantation detection
+   - Saves model checkpoints during training
+
+### 2. Inference and Analysis (`notebooks/plantation_analysis_inference.ipynb`)
+
+The inference notebook provides comprehensive analysis and visualization tools.
+
+#### Features of notebook:
+
+1. **Dataset Analysis**
+   - Ground truth statistics
+   - Spatial distribution visualization
+   - Interactive maps of plantation areas
+   - Size distribution analysis
+
+2. **Model Performance Analysis**
+   ```showcase_best_predictions(model, data_dir, num_samples=15)```
+   - Visualizes top predictions
+   - Calculates performance metrics:
+     - IoU (Intersection over Union)
+     - Precision
+     - Recall
+     - F1 Score
+   - Saves results to `outputs/best_predictions/`
+
+3. **Coordinate-based Prediction**
+   ```predict_on_coordinates(model, lon, lat, patch_size=256)```
+   - Downloads recent Sentinel-2 imagery for given coordinates
+   - Runs model prediction
+   - Visualizes results with overlays
+   - Calculates area statistics
+
+4. **Error Analysis**
+   - Confusion matrix visualization
+   - IoU score distribution
+   - False positive/negative analysis
+   - Edge case examination
+
+
 ## Features
 
 ### 1. Data Processing (`data_preprocessing.py`)
@@ -315,3 +385,6 @@ The pipeline consists of several stages:
 ### Data Requirements
 
 - Place your plantation data in `data/Plantations Data.geojson`
+
+
+
