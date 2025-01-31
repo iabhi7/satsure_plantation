@@ -23,7 +23,111 @@ plantation-monitoring/
 ```
 
 
-# Plantation Detection Model
+# Plantation Detection Model (pretraining)
+
+### Model Architecture and Selection
+
+#### Model Choice: DeepLabV3 with ResNet-50
+
+The plantation detection system uses DeepLabV3 with a ResNet-50 backbone for semantic segmentation. This choice was made for several reasons:
+
+1. **Architecture Benefits**
+   - Strong feature extraction through ResNet-50 backbone
+   - Atrous Spatial Pyramid Pooling (ASPP) for multi-scale processing
+   - Effective handling of varying plantation sizes
+   - Built-in handling of global context
+
+2. **Model Configuration**
+   ```python
+   model = deeplabv3_resnet50(pretrained=False)
+   model.classifier[-1] = nn.Conv2d(256, 2, kernel_size=(1, 1))  # Binary classification
+   ```
+   - Modified for binary segmentation (plantation vs. non-plantation)
+   - Leverages pretrained weights for feature extraction
+   - Custom classification head for our specific task
+
+3. **Input Processing**
+   - Image size: 256x256 pixels
+   - Three-channel input (RGB from Sentinel-2)
+   - Normalization per batch
+   - Optional data augmentation:
+     - Random horizontal/vertical flips
+     - Random rotation
+     - Color jittering
+
+#### Training Process
+
+1. **Data Preparation**
+   ```python
+   # Image preprocessing
+   image = (image - image.mean()) / image.std()  # Normalization
+   image = torch.from_numpy(image).float()       # Convert to tensor
+   ```
+
+2. **Loss Function**
+   - Binary Cross Entropy with Logits Loss
+   - Handles class imbalance through weighting
+   ```python
+   criterion = nn.BCEWithLogitsLoss(
+       pos_weight=torch.tensor([pos_weight])  # Adjusted for class balance
+   )
+   ```
+
+3. **Optimization**
+   - Adam optimizer with learning rate scheduling
+   ```python
+   optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+   scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+       optimizer, mode='min', patience=3
+   )
+   ```
+
+4. **Training Schedule**
+   - Number of epochs: 10 (default)
+   - Batch size: 4 (adjustable based on GPU memory)
+   - Learning rate: 0.001 with reduction on plateau
+   - Checkpointing every 5 epochs
+
+#### Model Performance Considerations
+
+1. **Advantages**
+   - Robust to varying plantation sizes
+   - Good handling of spatial context
+   - Efficient inference time
+   - Memory-efficient training
+
+2. **Limitations**
+   - Requires good quality RGB imagery
+   - May struggle with very small plantations
+   - Sensitive to cloud cover in imagery
+
+3. **Performance Metrics**
+   - IoU (Intersection over Union)
+   - Precision and Recall
+   - F1 Score
+   - Confusion Matrix analysis
+
+#### Alternative Models Considered
+
+1. **U-Net**
+   - Pros: Lighter weight, good for medical imaging
+   - Cons: Less context awareness, no pretrained weights
+
+2. **Mask R-CNN**
+   - Pros: Instance segmentation capability
+   - Cons: Overkill for binary segmentation, slower inference
+
+3. **FCN (Fully Convolutional Network)**
+   - Pros: Simpler architecture
+   - Cons: Less accurate on boundary details
+
+DeepLabV3 was chosen as it provided the best balance of:
+- Accuracy in plantation boundary detection
+- Reasonable training time
+- Good inference speed
+- Memory efficiency
+- Ability to handle varying plantation sizes
+
 
 ## Notebooks Documentation
 
@@ -385,6 +489,4 @@ The pipeline consists of several stages:
 ### Data Requirements
 
 - Place your plantation data in `data/Plantations Data.geojson`
-
-
 
